@@ -1,8 +1,13 @@
 import { parseHumanReadableNumber } from '@usesummit/utils';
 
 import { SimulationRun } from './types/SimulationRun';
+import forgivinglyParseAppIdentifier from './utils/forgivinglyParseAppIdentifier';
 
-function parseHumanReadableNumberWithFallback(raw: string) {
+function parseHumanReadableNumberWithFallback(raw: string | number) {
+    if (typeof raw === 'number') {
+        return raw;
+    }
+
     try {
         return parseHumanReadableNumber(raw);
     } catch (e) {
@@ -10,7 +15,19 @@ function parseHumanReadableNumberWithFallback(raw: string) {
     }
 }
 
+type SummitConfigurationOptions = {
+    app?: string;
+    apiKey?: string;
+    baseUrl?: string;
+};
+
+const defaultOptions = {
+    baseUrl: 'https://api.usesummit.com/v1/',
+};
+
 class Summit {
+    #apiBaseUrl = 'https://api.usesummit.com/v1/';
+
     #app: string | null = null;
     #apiKey: string | null = null;
 
@@ -18,9 +35,20 @@ class Summit {
     #sessionId: string | undefined = undefined;
     #externalUserId: string | undefined = undefined;
 
-    configure(app: string, apiKey: string) {
-        this.#app = app.replace(/^\//, '').replace(/$/, '');
-        this.#apiKey = apiKey;
+    constructor(options: SummitConfigurationOptions = {}) {
+        const { app, apiKey, baseUrl } = { ...options, ...defaultOptions };
+        this.configure(app, apiKey);
+        this.#apiBaseUrl = baseUrl;
+    }
+
+    configure(app?: string, apiKey?: string) {
+        if (app) {
+            this.#app = forgivinglyParseAppIdentifier(app);
+        }
+
+        if (apiKey) {
+            this.#apiKey = apiKey;
+        }
     }
 
     get publicUserId(): string | undefined {
@@ -39,7 +67,7 @@ class Summit {
         this.#sessionId = sessionId;
     }
 
-    prepare(parameters: Record<string, string> = {}) {
+    prepare(parameters: Record<string, string | number> = {}) {
         const parsedParameters = Object.fromEntries(
             Object.entries(parameters).map(([key, value]) => [
                 key,
@@ -55,14 +83,16 @@ class Summit {
         };
     }
 
-    run(parameters: Record<string, string> = {}): Promise<SimulationRun> {
+    run(
+        parameters: Record<string, string | number> = {}
+    ): Promise<SimulationRun> {
         if (!this.#app || !this.#apiKey) {
             throw new Error(
                 'Summit is not configured. Please call Summit.configure() first.'
             );
         }
 
-        return fetch(`https://api.usesummit.com/v1/${this.#app}/`, {
+        return fetch(`${this.#apiBaseUrl}/${this.#app}/`, {
             method: 'POST',
             headers: {
                 'X-Api-Key': this.#apiKey,
