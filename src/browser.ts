@@ -1,15 +1,19 @@
 import { default as SummitClient } from './index';
 
-import { getCachedIdentifier } from './utils/getCachedIdentifier';
+import { getIdentifier } from '@usesummit/utils';
 
 const USER_STORAGE_KEY = 'SUMMIT_ANONYMOUS_USER_IDENTIFIER';
 const SESSION_STORAGE_KEY = 'SUMMIT_ANONYMOUS_SESSION_IDENTIFIER';
 
-const [getPublicUserId, setPublicUserId, resetPublicUserId] =
-    getCachedIdentifier(USER_STORAGE_KEY, window.localStorage);
+const [getPublicUserId, setPublicUserId, resetPublicUserId] = getIdentifier(
+    USER_STORAGE_KEY,
+    undefined,
+    window.localStorage
+);
 
-const [getSessionId, setSessionId, resetSessionId] = getCachedIdentifier(
+const [getSessionId, setSessionId, resetSessionId] = getIdentifier(
     SESSION_STORAGE_KEY,
+    undefined,
     window.sessionStorage
 );
 
