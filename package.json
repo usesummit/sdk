@@ -12,11 +12,15 @@
     "./browser": {
       "require": "./dist/browser.cjs",
       "default": "./dist/browser.modern.js"
+    },
+    "./global": {
+      "require": "./dist/global.cjs",
+      "default": "./dist/global.modern.js"
     }
   },
   "main": "./dist/summit.cjs",
   "module": "./dist/summit.module.js",
-  "unpkg": "./dist/browser.umd.js",
+  "unpkg": "./dist/global.umd.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**.js*",

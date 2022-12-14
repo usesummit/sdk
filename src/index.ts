@@ -83,9 +83,9 @@ class Summit {
         };
     }
 
-    run(
+    run<T = Record<string, number>>(
         parameters: Record<string, string | number> = {}
-    ): Promise<SimulationRun> {
+    ): Promise<SimulationRun<T>> {
         if (!this.#app || !this.#apiKey) {
             throw new Error(
                 'Summit is not configured. Please call Summit.configure() first.'

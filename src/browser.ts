@@ -13,7 +13,7 @@ const [getSessionId, setSessionId, resetSessionId] = getCachedIdentifier(
     window.sessionStorage
 );
 
-class SummitBrowserClient extends SummitClient {
+export default class SummitBrowserClient extends SummitClient {
     get publicUserId(): string | undefined {
         return getPublicUserId();
     }
@@ -36,5 +36,3 @@ class SummitBrowserClient extends SummitClient {
         resetSessionId();
     }
 }
-
-window.Summit = window.Summit || new SummitBrowserClient();
