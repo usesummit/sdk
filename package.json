@@ -7,15 +7,18 @@
   "exports": {
     ".": {
       "require": "./dist/summit.cjs",
-      "default": "./dist/summit.modern.js"
+      "default": "./dist/summit.modern.js",
+      "types": "./dist/index.d.ts"
     },
     "./browser": {
       "require": "./dist/browser.cjs",
-      "default": "./dist/browser.modern.js"
+      "default": "./dist/browser.modern.js",
+      "types": "./dist/browser.d.ts"
     },
     "./global": {
       "require": "./dist/global.cjs",
-      "default": "./dist/global.modern.js"
+      "default": "./dist/global.modern.js",
+      "types": "./dist/global.d.ts"
     }
   },
   "main": "./dist/summit.cjs",
