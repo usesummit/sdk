@@ -6,19 +6,19 @@
   "source": "src/index.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/summit.cjs",
-      "default": "./dist/summit.modern.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/summit.modern.js"
     },
     "./browser": {
+      "types": "./dist/browser.d.ts",
       "require": "./dist/browser.cjs",
-      "default": "./dist/browser.modern.js",
-      "types": "./dist/browser.d.ts"
+      "default": "./dist/browser.modern.js"
     },
     "./global": {
+      "types": "./dist/global.d.ts",
       "require": "./dist/global.cjs",
-      "default": "./dist/global.modern.js",
-      "types": "./dist/global.d.ts"
+      "default": "./dist/global.modern.js"
     }
   },
   "main": "./dist/summit.cjs",
@@ -27,7 +27,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**.js*",
-    "dist/**/*.ts",
+    "dist/**/*.d.ts",
     "src"
   ],
   "scripts": {
