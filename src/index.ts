@@ -16,7 +16,7 @@ function parseHumanReadableNumberWithFallback(raw: string | number) {
 }
 
 type SummitConfigurationOptions = {
-    app?: string;
+    app: string;
     apiKey?: string;
     baseUrl?: string;
 };
@@ -35,19 +35,55 @@ class Summit {
     #sessionId: string | undefined = undefined;
     #externalUserId: string | undefined = undefined;
 
-    constructor(options: SummitConfigurationOptions = {}) {
-        const { app, apiKey, baseUrl } = { ...options, ...defaultOptions };
-        this.configure(app, apiKey);
-        this.#apiBaseUrl = baseUrl;
+    constructor(options?: string | SummitConfigurationOptions) {
+        if (options) {
+            this.configure(options);
+        }
     }
 
-    configure(app?: string, apiKey?: string) {
-        if (app) {
-            this.#app = forgivinglyParseAppIdentifier(app);
-        }
+    configure(options: string | SummitConfigurationOptions) {
+        if (typeof options === 'string') {
+            const { baseUrl: defaultBaseUrl } = defaultOptions;
 
-        if (apiKey) {
+            const {
+                app: parsedApp,
+                baseUrl: parsedBaseUrl,
+                apiKey: parsedApiKey,
+            } = forgivinglyParseAppIdentifier(options);
+
+            this.#app = parsedApp;
+            this.#apiKey = parsedApiKey;
+            this.#apiBaseUrl = parsedBaseUrl ?? defaultBaseUrl;
+        } else {
+            let { app, apiKey, baseUrl } = { ...options, ...defaultOptions };
+
+            if (!app) {
+                throw new Error('App identifier is required');
+            }
+
+            const {
+                app: parsedApp,
+                baseUrl: parsedBaseUrl,
+                apiKey: parsedApiKey,
+            } = forgivinglyParseAppIdentifier(app);
+
+            app = parsedApp;
+
+            if (parsedApiKey) {
+                apiKey = parsedApiKey;
+            }
+
+            if (parsedBaseUrl) {
+                baseUrl = parsedBaseUrl;
+            }
+
+            if (!apiKey) {
+                throw new Error('API key is required and could not be derived');
+            }
+
+            this.#app = app;
             this.#apiKey = apiKey;
+            this.#apiBaseUrl = baseUrl;
         }
     }
 
