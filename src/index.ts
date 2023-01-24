@@ -21,6 +21,12 @@ type SummitConfigurationOptions = {
     baseUrl?: string;
 };
 
+type SimulationOptions = {
+    start?: string;
+    end?: string;
+    resolution?: string;
+};
+
 const defaultOptions = {
     baseUrl: 'https://api.usesummit.com/v1/',
 };
@@ -103,9 +109,18 @@ class Summit {
         this.#sessionId = sessionId;
     }
 
-    prepare(parameters: Record<string, string | number> = {}) {
+    prepare(parameters: FormData | Record<string, string | number> = {}) {
+        const entries =
+            parameters instanceof FormData
+                ? Array.from(
+                      parameters.entries(),
+                      ([key, value]) =>
+                          [key, value.toString()] as [string, string]
+                  )
+                : Object.entries(parameters);
+
         const parsedParameters = Object.fromEntries(
-            Object.entries(parameters).map(([key, value]) => [
+            entries.map(([key, value]) => [
                 key,
                 parseHumanReadableNumberWithFallback(value),
             ])
@@ -120,7 +135,8 @@ class Summit {
     }
 
     run<T = Record<string, number>>(
-        parameters: Record<string, string | number> = {}
+        parameters: FormData | Record<string, string | number> = {},
+        options?: SimulationOptions
     ): Promise<SimulationRun<T>> {
         if (!this.#app || !this.#apiKey) {
             throw new Error(
@@ -128,13 +144,18 @@ class Summit {
             );
         }
 
+        const body = {
+            ...this.prepare(parameters),
+            ...(options ? { options } : {}),
+        };
+
         return fetch(`${this.#apiBaseUrl}/${this.#app}/`, {
             method: 'POST',
             headers: {
                 'X-Api-Key': this.#apiKey,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(this.prepare(parameters)),
+            body: JSON.stringify(body),
         }).then((res) => res.json());
     }
 
