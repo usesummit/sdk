@@ -159,10 +159,32 @@ class Summit {
 
     identify(identifier: string) {
         this.addIdentifier(identifier);
+        this.syncIdentifiers();
     }
 
     unidentify() {
         this.#identifiers = new Set();
+    }
+
+    syncIdentifiers(): Promise<void> {
+        if (!this.#app || !this.#apiKey) {
+            throw new Error(
+                'Summit is not configured. Please call Summit.configure() first.'
+            );
+        }
+
+        if (this.#identifiers.size === 0) {
+            return Promise.resolve();
+        }
+
+        return fetch(`${this.#apiBaseUrl}/identify/`, {
+            method: 'POST',
+            headers: {
+                'X-Api-Key': this.#apiKey,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ identifiers: Array.from(this.#identifiers) }),
+        }).then((res) => res.json());
     }
 
     reset() {
