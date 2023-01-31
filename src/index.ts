@@ -1,6 +1,8 @@
 import { parseHumanReadableNumber } from '@usesummit/utils';
 
 import { SimulationRun } from './types/SimulationRun';
+import { SummitConfigurationOptions } from './types/SummitConfigurationOptions';
+
 import forgivinglyParseAppIdentifier from './utils/forgivinglyParseAppIdentifier';
 
 function parseHumanReadableNumberWithFallback(raw: string | number) {
@@ -14,12 +16,6 @@ function parseHumanReadableNumberWithFallback(raw: string | number) {
         return raw;
     }
 }
-
-type SummitConfigurationOptions = {
-    app: string;
-    apiKey?: string;
-    baseUrl?: string;
-};
 
 type SimulationOptions = {
     start?: string;
@@ -37,9 +33,9 @@ class Summit {
     #app: string | null = null;
     #apiKey: string | null = null;
 
-    #publicUserId: string | undefined = undefined;
     #sessionId: string | undefined = undefined;
-    #externalUserId: string | undefined = undefined;
+
+    #identifiers: Set<string> = new Set();
 
     constructor(options?: string | SummitConfigurationOptions) {
         if (options) {
@@ -93,12 +89,15 @@ class Summit {
         }
     }
 
-    get publicUserId(): string | undefined {
-        return this.#publicUserId;
+    addIdentifier(identifier: string): void {
+        this.#identifiers.add(identifier);
     }
 
-    set publicUserId(publicUserId: string | undefined) {
-        this.#publicUserId = publicUserId;
+    set publicUserId(publicUserId: string) {
+        console.warn(
+            '`publicUserId` is deprecated. Use `addIdentifier` directly instead.'
+        );
+        this.addIdentifier(publicUserId);
     }
 
     get sessionId(): string | undefined {
@@ -128,8 +127,7 @@ class Summit {
 
         return {
             parameters: parsedParameters,
-            external_user_id: this.#externalUserId,
-            public_user_id: this.publicUserId,
+            identifiers: Array.from(this.#identifiers),
             session_id: this.sessionId,
         };
     }
@@ -159,17 +157,38 @@ class Summit {
         }).then((res) => res.json());
     }
 
-    identify(externalUserId: string) {
-        this.#externalUserId = externalUserId;
+    identify(identifier: string) {
+        this.addIdentifier(identifier);
+        this.syncIdentifiers();
     }
 
     unidentify() {
-        this.#externalUserId = undefined;
+        this.#identifiers = new Set();
+    }
+
+    syncIdentifiers(): Promise<void> {
+        if (!this.#app || !this.#apiKey) {
+            throw new Error(
+                'Summit is not configured. Please call Summit.configure() first.'
+            );
+        }
+
+        if (this.#identifiers.size === 0) {
+            return Promise.resolve();
+        }
+
+        return fetch(`${this.#apiBaseUrl}/identify/`, {
+            method: 'POST',
+            headers: {
+                'X-Api-Key': this.#apiKey,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ identifiers: Array.from(this.#identifiers) }),
+        }).then((res) => res.json());
     }
 
     reset() {
-        this.#externalUserId = undefined;
-        this.#publicUserId = undefined;
+        this.unidentify();
         this.#sessionId = undefined;
     }
 }

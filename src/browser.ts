@@ -2,41 +2,37 @@ import { default as SummitClient } from './index';
 
 import { getIdentifier } from '@usesummit/utils';
 
+import { SummitConfigurationOptions } from './types/SummitConfigurationOptions';
+
 const USER_STORAGE_KEY = 'SUMMIT_ANONYMOUS_USER_IDENTIFIER';
 const SESSION_STORAGE_KEY = 'SUMMIT_ANONYMOUS_SESSION_IDENTIFIER';
 
-const [getPublicUserId, setPublicUserId, resetPublicUserId] = getIdentifier(
+const [getAnonymousUserId, , resetAnonymousUserId] = getIdentifier(
     USER_STORAGE_KEY,
     undefined,
     window.localStorage
 );
 
-const [getSessionId, setSessionId, resetSessionId] = getIdentifier(
+const [getSessionId, , resetSessionId] = getIdentifier(
     SESSION_STORAGE_KEY,
     undefined,
     window.sessionStorage
 );
 
 export default class SummitBrowserClient extends SummitClient {
-    get publicUserId(): string | undefined {
-        return getPublicUserId();
-    }
-
-    set publicUserId(publicUserId: string | undefined) {
-        setPublicUserId(publicUserId);
+    constructor(options?: string | SummitConfigurationOptions) {
+        super(options);
+        this.addIdentifier(getAnonymousUserId());
     }
 
     get sessionId(): string | undefined {
         return getSessionId();
     }
 
-    set sessionId(sessionId: string | undefined) {
-        setSessionId(sessionId);
-    }
-
     reset() {
         super.reset();
-        resetPublicUserId();
+        resetAnonymousUserId();
         resetSessionId();
+        this.addIdentifier(getAnonymousUserId());
     }
 }
