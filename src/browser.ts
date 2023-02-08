@@ -78,6 +78,10 @@ export default class SummitBrowserClient extends SummitClient {
             iframeUrl.searchParams.append('session_id', this.sessionId);
         }
 
+        if (this.apiKey) {
+            iframeUrl.searchParams.append('api_key', this.apiKey);
+        }
+
         node.innerHTML = `
             <iframe src="${iframeUrl}" width="100%" height="100%" frameborder="0"></iframe>
         `;

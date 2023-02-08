@@ -41,6 +41,10 @@ class Summit {
 
     #apiKey: string | null = null;
 
+    get apiKey(): string | null {
+        return this.#apiKey;
+    }
+
     #sessionId: string | undefined = undefined;
 
     get sessionId(): string | undefined {
