@@ -1,6 +1,6 @@
 import { default as SummitClient } from './index';
 
-import { getIdentifier } from '@usesummit/utils';
+import { getIdentifier, getCookieStorage } from '@usesummit/utils';
 
 import {
     DEFAULT_OPTIONS,
@@ -10,28 +10,52 @@ import {
 const USER_STORAGE_KEY = 'SUMMIT_ANONYMOUS_USER_IDENTIFIER';
 const SESSION_STORAGE_KEY = 'SUMMIT_ANONYMOUS_SESSION_IDENTIFIER';
 
-const [getAnonymousUserId, , resetAnonymousUserId] = getIdentifier(
-    USER_STORAGE_KEY,
-    undefined,
-    window.localStorage
-);
+let getAnonymousUserId = () => '';
+let resetAnonymousUserId = () => {};
 
-const [getSessionId, , resetSessionId] = getIdentifier(
-    SESSION_STORAGE_KEY,
-    undefined,
-    window.sessionStorage
-);
+let getSessionId = () => '';
+let resetSessionId = () => {};
 
 export default class SummitBrowserClient extends SummitClient {
     #embedBaseUrl: string = DEFAULT_OPTIONS.embedBaseUrl;
 
     constructor(options?: string | SummitBrowserConfigurationOptions) {
         super(options);
-        this.addIdentifier(getAnonymousUserId());
     }
 
     configure(options: string | SummitBrowserConfigurationOptions) {
         super.configure(options);
+
+        const cookieOptions =
+            options && typeof options !== 'string' && options.cookie;
+
+        [getAnonymousUserId, , resetAnonymousUserId] = getIdentifier(
+            USER_STORAGE_KEY,
+            undefined,
+            cookieOptions
+                ? getCookieStorage(
+                      typeof cookieOptions !== 'boolean' ? cookieOptions : {}
+                  )
+                : window.localStorage
+        );
+
+        [getSessionId, , resetSessionId] = getIdentifier(
+            SESSION_STORAGE_KEY,
+            undefined,
+            cookieOptions
+                ? getCookieStorage(
+                      typeof cookieOptions !== 'boolean'
+                          ? {
+                                ...cookieOptions,
+                                maxAge: undefined,
+                                expires: undefined,
+                            }
+                          : { maxAge: undefined, expires: undefined }
+                  )
+                : window.sessionStorage
+        );
+
+        this.addIdentifier(getAnonymousUserId());
 
         if (typeof options !== 'string' && options?.embedBaseUrl) {
             this.#embedBaseUrl = options.embedBaseUrl;
