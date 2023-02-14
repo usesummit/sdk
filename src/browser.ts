@@ -57,6 +57,12 @@ export default class SummitBrowserClient extends SummitClient {
 
         this.addIdentifier(getAnonymousUserId());
 
+        if (cookieOptions) {
+            // Call the getter so that the new value is set,
+            // and in case of cookies, will be sent on subsequent network requests
+            getSessionId();
+        }
+
         if (typeof options !== 'string' && options?.embedBaseUrl) {
             this.#embedBaseUrl = options.embedBaseUrl;
         }
@@ -71,6 +77,10 @@ export default class SummitBrowserClient extends SummitClient {
         resetAnonymousUserId();
         resetSessionId();
         this.addIdentifier(getAnonymousUserId());
+
+        // Call the getter so that the new value is set
+        // and will be sent on subsequent network requests
+        getSessionId();
     }
 
     embed(
