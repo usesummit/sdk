@@ -1,6 +1,6 @@
 {
   "name": "@usesummit/sdk",
-  "version": "0.0.1-alpha.13",
+  "version": "0.0.1-alpha.14",
   "author": "Pieter Beulque <pieter.beulque@usesummit.com>",
   "type": "module",
   "source": "src/index.ts",
@@ -11,13 +11,13 @@
       "require": "./dist/summit.cjs",
       "default": "./dist/summit.modern.js"
     },
-    "./browser": {
+    "./dist/browser": {
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.module.js",
       "require": "./dist/browser.cjs",
       "default": "./dist/browser.modern.js"
     },
-    "./global": {
+    "./dist/global": {
       "types": "./dist/global.d.ts",
       "import": "./dist/browser.module.js",
       "require": "./dist/global.cjs",
