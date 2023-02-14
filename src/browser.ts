@@ -36,7 +36,7 @@ export default class SummitBrowserClient extends SummitClient {
                 ? getCookieStorage(
                       typeof cookieOptions !== 'boolean' ? cookieOptions : {}
                   )
-                : window.localStorage
+                : 'localStorage'
         );
 
         [getSessionId, , resetSessionId] = getIdentifier(
@@ -52,7 +52,7 @@ export default class SummitBrowserClient extends SummitClient {
                             }
                           : { maxAge: undefined, expires: undefined }
                   )
-                : window.sessionStorage
+                : 'sessionStorage'
         );
 
         this.addIdentifier(getAnonymousUserId());
