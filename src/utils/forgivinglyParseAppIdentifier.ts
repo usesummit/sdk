@@ -1,9 +1,9 @@
-const identifierFormat = /([a-zA-Z0-9-]+)\/([0-9abcdef]{6})\/([a-zA-Z0-9-]+)/;
+import parseAppIdentifier from './parseAppIdentifier';
 
 export default function forgivinglyParseAppIdentifier(identifier: string): {
     app: string;
-    baseUrl: string | null;
-    apiKey: string | null;
+    baseUrl: string | undefined;
+    apiKey: string | undefined;
 } {
     const [parsedIdentifier, baseUrl, apiKey] = (() => {
         try {
@@ -22,22 +22,16 @@ export default function forgivinglyParseAppIdentifier(identifier: string): {
             return [
                 app,
                 `${baseUrl}/${version}/`,
-                parsed.searchParams.get('api_key') ?? null,
+                parsed.searchParams.get('api_key') ?? undefined,
             ];
         } catch (e) {
-            return [identifier, null, null];
+            return [identifier, undefined, undefined];
         }
     })();
 
-    const cleanedIdentifier = parsedIdentifier
-        .replace(/^(\/)+/, '')
-        .replace(/(\/)+$/, '');
-
-    const match = cleanedIdentifier.match(identifierFormat);
-
-    if (!match) {
-        throw new Error(`Invalid app identifier format: ${identifier}`);
-    }
-
-    return { app: cleanedIdentifier, baseUrl, apiKey };
+    return {
+        app: parseAppIdentifier(parsedIdentifier),
+        baseUrl,
+        apiKey,
+    };
 }

@@ -3,7 +3,9 @@ import { parseHumanReadableNumber } from '@usesummit/utils';
 import { SimulationRun } from './types/SimulationRun';
 import {
     DEFAULT_OPTIONS,
-    SummitConfigurationOptions,
+    ApiKey,
+    ConfigurationOptions,
+    RunAppIdentifier,
 } from './types/SummitConfigurationOptions';
 
 import forgivinglyParseAppIdentifier from './utils/forgivinglyParseAppIdentifier';
@@ -33,15 +35,9 @@ class Summit {
         return this.#apiBaseUrl;
     }
 
-    #app: string | null = null;
+    #apiKey: ApiKey | null = null;
 
-    get app(): string | null {
-        return this.#app;
-    }
-
-    #apiKey: string | null = null;
-
-    get apiKey(): string | null {
+    get apiKey(): ApiKey | null {
         return this.#apiKey;
     }
 
@@ -61,63 +57,28 @@ class Summit {
         return Array.from(this.#identifiers);
     }
 
-    constructor(options?: string | SummitConfigurationOptions) {
+    constructor(options?: ApiKey | ConfigurationOptions) {
         if (options) {
             this.configure(options);
         }
     }
 
-    configure(options: string | SummitConfigurationOptions) {
-        if (typeof options === 'string') {
-            const { baseUrl: defaultBaseUrl } = DEFAULT_OPTIONS;
+    configure(options: ApiKey | ConfigurationOptions) {
+        const { apiKey, baseUrl } = {
+            ...DEFAULT_OPTIONS,
+            ...(typeof options === 'string' ? { apiKey: options } : options),
+        };
 
-            const {
-                app: parsedApp,
-                baseUrl: parsedBaseUrl,
-                apiKey: parsedApiKey,
-            } = forgivinglyParseAppIdentifier(options);
-
-            this.#app = parsedApp;
-            this.#apiKey = parsedApiKey;
-            this.#apiBaseUrl = parsedBaseUrl ?? defaultBaseUrl;
-        } else {
-            let { app, apiKey, baseUrl } = { ...DEFAULT_OPTIONS, ...options };
-
-            if (!app) {
-                throw new Error('App identifier is required');
-            }
-
-            const {
-                app: parsedApp,
-                baseUrl: parsedBaseUrl,
-                apiKey: parsedApiKey,
-            } = forgivinglyParseAppIdentifier(app);
-
-            app = parsedApp;
-
-            if (parsedApiKey) {
-                apiKey = parsedApiKey;
-            }
-
-            if (parsedBaseUrl) {
-                baseUrl = parsedBaseUrl;
-            }
-
-            this.#app = app;
-            this.#apiKey = apiKey ?? null;
-            this.#apiBaseUrl = baseUrl;
+        if (!apiKey) {
+            throw new Error('`apiKey` is required');
         }
+
+        this.#apiKey = apiKey;
+        this.#apiBaseUrl = baseUrl;
     }
 
     addIdentifier(identifier: string): void {
         this.#identifiers.add(identifier);
-    }
-
-    set publicUserId(publicUserId: string) {
-        console.warn(
-            '`publicUserId` is deprecated. Use `addIdentifier` directly instead.'
-        );
-        this.addIdentifier(publicUserId);
     }
 
     prepare(parameters: FormData | Record<string, string | number> = {}) {
@@ -145,13 +106,18 @@ class Summit {
     }
 
     run<T = Record<string, number>>(
+        app: RunAppIdentifier,
         parameters: FormData | Record<string, string | number> = {},
         options?: SimulationOptions
     ): Promise<SimulationRun<T>> {
-        if (!this.#app || !this.#apiKey) {
-            throw new Error(
-                'Summit is not configured. Please call Summit.configure() first.'
-            );
+        const {
+            app: appIdentifier,
+            baseUrl = this.#apiBaseUrl,
+            apiKey = this.#apiKey,
+        } = typeof app === 'string' ? forgivinglyParseAppIdentifier(app) : app;
+
+        if (!apiKey) {
+            throw new Error('`apiKey` is required');
         }
 
         const body = {
@@ -159,10 +125,10 @@ class Summit {
             ...(options ? { options } : {}),
         };
 
-        return fetch(`${this.#apiBaseUrl}/${this.#app}/`, {
+        return fetch(`${baseUrl}/${appIdentifier}/`, {
             method: 'POST',
             headers: {
-                'X-Api-Key': this.#apiKey,
+                'X-Api-Key': apiKey,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(body),
@@ -179,12 +145,14 @@ class Summit {
     }
 
     syncIdentifiers(): Promise<void> {
-        if (!this.#app || !this.#apiKey) {
-            // If the app is not yet configured, we won't sync the identifiersf
+        if (!this.#apiKey) {
+            // If the app is not yet configured, we won't sync the identifiers
             // and instead for either a run, an embed (in browser context), or a specific syncIdentifiers call
             //
             // We could also consider implementing a queuing system and sync the identifiers once the app is configured
-            console.warn('Summit is not configured, not syncing identifiers');
+            console.warn(
+                'Summit does not have an API key, not syncing identifiers. Syncing might still happen on the first run'
+            );
             return Promise.resolve();
         }
 

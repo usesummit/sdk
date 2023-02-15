@@ -1,30 +1,30 @@
-// @todo - This should not be copied from the `utils` package
-export type CookieOptions = {
-    domain?: string | null;
-    path?: string;
-    secure?: boolean;
-    sameSite?: 'Lax' | 'Strict' | 'None';
-    maxAge?: number;
-    expires?: Date | null;
-};
+import { CookieStorageOptions } from '@usesummit/utils';
 
-// @todo - This should not be copied from the `utils` package
-export type CookieStorageOptions = CookieOptions & {
-    prefix?: string;
-};
+export type ApiKey = string;
 
-export type SummitConfigurationOptions = {
-    app: string;
+export type ConfigurationOptions = {
     apiKey?: string;
     baseUrl?: string;
 };
 
-export type SummitBrowserConfigurationOptions = SummitConfigurationOptions & {
+export type BrowserConfigurationOptions = ConfigurationOptions & {
     embedBaseUrl?: string;
-    cookie: true | CookieStorageOptions;
+    cookie?: true | CookieStorageOptions;
 };
+
+export type RunAppIdentifier =
+    | string
+    | (ConfigurationOptions & { app: string });
+
+export type EmbedAppIdentifier =
+    | string
+    | (Exclude<BrowserConfigurationOptions, 'cookie'> & { app: string });
 
 export const DEFAULT_OPTIONS = Object.freeze({
     baseUrl: 'https://api.usesummit.com/v1',
+});
+
+export const DEFAULT_BROWSER_OPTIONS = Object.freeze({
+    ...DEFAULT_OPTIONS,
     embedBaseUrl: 'https://usesummit.com/embed',
 });

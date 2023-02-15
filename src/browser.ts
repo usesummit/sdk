@@ -3,8 +3,10 @@ import { default as SummitClient } from './index';
 import { getIdentifier, getCookieStorage } from '@usesummit/utils';
 
 import {
-    DEFAULT_OPTIONS,
-    SummitBrowserConfigurationOptions,
+    DEFAULT_BROWSER_OPTIONS,
+    ApiKey,
+    BrowserConfigurationOptions,
+    EmbedAppIdentifier,
 } from './types/SummitConfigurationOptions';
 
 const USER_STORAGE_KEY = 'SUMMIT_ANONYMOUS_USER_IDENTIFIER';
@@ -17,54 +19,59 @@ let getSessionId = () => '';
 let resetSessionId = () => {};
 
 export default class SummitBrowserClient extends SummitClient {
-    #embedBaseUrl: string = DEFAULT_OPTIONS.embedBaseUrl;
+    #embedBaseUrl: string = DEFAULT_BROWSER_OPTIONS.embedBaseUrl;
 
-    constructor(options?: string | SummitBrowserConfigurationOptions) {
+    constructor(options?: ApiKey | BrowserConfigurationOptions) {
         super(options);
     }
 
-    configure(options: string | SummitBrowserConfigurationOptions) {
+    configure(options: ApiKey | BrowserConfigurationOptions) {
         super.configure(options);
 
-        const cookieOptions =
-            options && typeof options !== 'string' && options.cookie;
+        if (typeof options !== 'string') {
+            const { cookie: cookieOptions, embedBaseUrl } = {
+                cookie: false,
+                ...DEFAULT_BROWSER_OPTIONS,
+                ...options,
+            };
 
-        [getAnonymousUserId, , resetAnonymousUserId] = getIdentifier(
-            USER_STORAGE_KEY,
-            undefined,
-            cookieOptions
-                ? getCookieStorage(
-                      typeof cookieOptions !== 'boolean' ? cookieOptions : {}
-                  )
-                : 'localStorage'
-        );
+            [getAnonymousUserId, , resetAnonymousUserId] = getIdentifier(
+                USER_STORAGE_KEY,
+                undefined,
+                cookieOptions
+                    ? getCookieStorage(
+                          typeof cookieOptions !== 'boolean'
+                              ? cookieOptions
+                              : {}
+                      )
+                    : 'localStorage'
+            );
 
-        [getSessionId, , resetSessionId] = getIdentifier(
-            SESSION_STORAGE_KEY,
-            undefined,
-            cookieOptions
-                ? getCookieStorage(
-                      typeof cookieOptions !== 'boolean'
-                          ? {
-                                ...cookieOptions,
-                                maxAge: undefined,
-                                expires: undefined,
-                            }
-                          : { maxAge: undefined, expires: undefined }
-                  )
-                : 'sessionStorage'
-        );
+            [getSessionId, , resetSessionId] = getIdentifier(
+                SESSION_STORAGE_KEY,
+                undefined,
+                cookieOptions
+                    ? getCookieStorage(
+                          typeof cookieOptions !== 'boolean'
+                              ? {
+                                    ...cookieOptions,
+                                    maxAge: undefined,
+                                    expires: undefined,
+                                }
+                              : { maxAge: undefined, expires: undefined }
+                      )
+                    : 'sessionStorage'
+            );
 
-        this.addIdentifier(getAnonymousUserId());
+            this.addIdentifier(getAnonymousUserId());
 
-        if (cookieOptions) {
-            // Call the getter so that the new value is set,
-            // and in case of cookies, will be sent on subsequent network requests
-            getSessionId();
-        }
+            if (cookieOptions) {
+                // Call the getter so that the new value is set,
+                // and in case of cookies, will be sent on subsequent network requests
+                getSessionId();
+            }
 
-        if (typeof options !== 'string' && options?.embedBaseUrl) {
-            this.#embedBaseUrl = options.embedBaseUrl;
+            this.#embedBaseUrl = embedBaseUrl;
         }
     }
 
@@ -83,13 +90,12 @@ export default class SummitBrowserClient extends SummitClient {
         getSessionId();
     }
 
-    embed(
-        targetNode: HTMLElement | string,
-        options?: SummitBrowserConfigurationOptions
-    ) {
-        if (options) {
-            this.configure(options);
-        }
+    embed(app: EmbedAppIdentifier, targetNode: HTMLElement | string) {
+        const {
+            app: appIdentifier,
+            embedBaseUrl = this.#embedBaseUrl,
+            apiKey = this.apiKey,
+        } = typeof app === 'string' ? { app } : app;
 
         const node =
             typeof targetNode === 'string'
@@ -100,9 +106,9 @@ export default class SummitBrowserClient extends SummitClient {
             throw new Error('Embed target node not found');
         }
 
-        const iframeUrl = new URL(this.#embedBaseUrl);
+        const iframeUrl = new URL(embedBaseUrl);
 
-        iframeUrl.pathname = `/embed/${this.app}/`;
+        iframeUrl.pathname = `/embed/${appIdentifier}/`;
 
         this.identifiers.forEach((identifier) => {
             iframeUrl.searchParams.append('identifiers', identifier);
@@ -112,8 +118,8 @@ export default class SummitBrowserClient extends SummitClient {
             iframeUrl.searchParams.append('session_id', this.sessionId);
         }
 
-        if (this.apiKey) {
-            iframeUrl.searchParams.append('api_key', this.apiKey);
+        if (apiKey) {
+            iframeUrl.searchParams.append('api_key', apiKey);
         }
 
         node.innerHTML = `

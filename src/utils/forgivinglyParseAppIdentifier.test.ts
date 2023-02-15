@@ -2,48 +2,6 @@ import { test, expect } from '@jest/globals';
 
 import forgivinglyParseAppIdentifier from './forgivinglyParseAppIdentifier';
 
-test('supports correct identifiers', () => {
-    expect(
-        forgivinglyParseAppIdentifier(
-            'summit-agency/db86be/exit-waterfall-calculator'
-        )
-    ).toEqual({
-        app: 'summit-agency/db86be/exit-waterfall-calculator',
-        baseUrl: null,
-        apiKey: null,
-    });
-});
-
-test('does not trip over leading or trailing slashes', () => {
-    expect(
-        forgivinglyParseAppIdentifier(
-            '/summit-agency/db86be/exit-waterfall-calculator'
-        )
-    ).toEqual({
-        app: 'summit-agency/db86be/exit-waterfall-calculator',
-        baseUrl: null,
-        apiKey: null,
-    });
-    expect(
-        forgivinglyParseAppIdentifier(
-            'summit-agency/db86be/exit-waterfall-calculator/'
-        )
-    ).toEqual({
-        app: 'summit-agency/db86be/exit-waterfall-calculator',
-        baseUrl: null,
-        apiKey: null,
-    });
-    expect(
-        forgivinglyParseAppIdentifier(
-            '/summit-agency/db86be/exit-waterfall-calculator/'
-        )
-    ).toEqual({
-        app: 'summit-agency/db86be/exit-waterfall-calculator',
-        baseUrl: null,
-        apiKey: null,
-    });
-});
-
 test('does work with full API URL', () => {
     expect(
         forgivinglyParseAppIdentifier(
@@ -52,7 +10,7 @@ test('does work with full API URL', () => {
     ).toEqual({
         app: 'summit-agency/db86be/exit-waterfall-calculator',
         baseUrl: 'https://api.usesummit.com/v1/',
-        apiKey: null,
+        apiKey: undefined,
     });
 });
 
