@@ -2,15 +2,14 @@ import { default as SummitClient } from './index';
 
 import { getIdentifier, getCookieStorage } from '@usesummit/utils';
 
+import { SESSION_STORAGE_KEY, USER_STORAGE_KEY } from './constants/keys';
+
 import {
     DEFAULT_BROWSER_OPTIONS,
     ApiKey,
     BrowserConfigurationOptions,
     EmbedAppIdentifier,
 } from './types/SummitConfigurationOptions';
-
-const USER_STORAGE_KEY = 'SUMMIT_ANONYMOUS_USER_IDENTIFIER';
-const SESSION_STORAGE_KEY = 'SUMMIT_ANONYMOUS_SESSION_IDENTIFIER';
 
 let getAnonymousUserId = () => '';
 let resetAnonymousUserId = () => {};
