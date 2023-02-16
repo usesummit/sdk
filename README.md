@@ -30,9 +30,10 @@ const summit = new Summit('your-optional-api-key');
 
 Run your app by calling `summit.run()` with these options:
 
-`app`: `{ app: 'org-slug/id/app-slug', apiKey: 'app-api-key' }`. You can get this information from the _API_ tab in the project settings dialog. The `apiKey` is optional if you've initialized the client with an API key.
-`parameters`: a dictionary with your app's parameters. If your leave out any parameters, it will run using the default values in the Summit model driving the app logic.
-`options`: `{ start?: 'iso-string', end?: 'iso-string', resolution?: 'month' | 'year' | … }`
+-   `app`: `{ app: 'org-slug/id/app-slug', apiKey: 'app-api-key' }`. You can get this information from the _API_ tab in the project settings dialog. The `apiKey` is optional if you've initialized the client with an API key.
+-   `parameters`: a dictionary with your app's parameters. If your leave out any parameters, it will run using the default values in the Summit model driving the app logic.
+-   `options`: `{ start?: 'iso-string', end?: 'iso-string', resolution?: 'month' | 'year' | … }`
+
 `run()` returns a `Promise` that resolves into an object with this structure:
 
 ```
