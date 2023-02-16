@@ -7,6 +7,13 @@ You can use this SDK to call your Summit apps over API from your website or apps
 > 🌱 The Summit SDK is fresh out of the oven and in an alpha state. Things might change at any time, but we're happy to collaborate on your implementation and make sure we don't break things going forward.
 > You can reach me at [pieter.beulque@usesummit.com](mailto:pieter.beulque@usesummit.com) if you're planning on rolling out your own implementation and have questions or concerns.
 
+## Table of Contents
+
+-   [Node client](#node)
+-   [Browser client](#browser)
+-   [Browser global](#global)
+    -   [Example: Webflow](#example-webflow)
+
 ## Node
 
 ### Initializing
