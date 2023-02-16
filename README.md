@@ -110,3 +110,118 @@ Including this script in your HTML will add a `window.Summit` global to your web
 You can then configure that client with your API key or cookie settings by calling `window.Summit.configure()`. This method supports the same options as the constructor.
 
 Other than that, all methods supported by the browser client are callable on the global `window.Summit` instance: `window.Summit.run()`, `window.Summit.embed()`, and `window.Summit.identify()`.
+
+### Example: Webflow
+
+```html
+<script src="https://unpkg.com/@usesummit/sdk@0.1.0-alpha.2/dist/global.umd.js"></script>
+
+<script>
+    window.Summit.configure('my-app-api-key');
+
+    // Fancy number formatting is a browser built-in nowadays
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+    });
+
+    function initCalculator() {
+        const form = document.getElementsByClassName('js-rev-share-form')[0];
+        const runway = document.getElementsByClassName(
+            'js-rev-share-output-runway'
+        )[0];
+        const repaymentCap = document.getElementsByClassName(
+            'js-rev-share-output-repayment-cap'
+        )[0];
+
+        // Set initial values, you can't do that directly in Webflow for some reason
+        form.querySelector('[name=cash_balance]').value = '50k';
+        form.querySelector('[name=mrr]').value = '25k';
+        form.querySelector('[name=mrr_growth_rate]').value = '8';
+        form.querySelector('[name=monthly_burn]').value = '50k';
+        form.querySelector('[name=loan_amount]').value = '100k';
+        form.querySelector('[name=rev_share_pct]').value = '7.5';
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Basic input validation
+            let isValid = true;
+
+            Array.from(
+                form.querySelectorAll('input:not([type=submit])')
+            ).forEach(function (input) {
+                if (!input.value) {
+                    input.classList.add('has-error');
+                    isValid = false;
+                } else {
+                    input.classList.remove('has-error');
+                }
+            });
+
+            if (!isValid) {
+                return false;
+            }
+
+            const formData = new FormData(form);
+
+            // Show a loading state on the button
+            const button = form.querySelector('[type=submit]');
+
+            const initialButtonLabel = button.value;
+
+            button.value = 'Simulating…';
+            button.setAttribute('disabled', 'disabled');
+            button.style.opacity = 0.6;
+
+            window.Summit.run('my-org/31159e/my-app', formData).then(function (
+                response
+            ) {
+                // Undo loading state on the button
+                button.value = initialButtonLabel;
+                button.removeAttribute('disabled');
+                button.style.opacity = 1;
+
+                // This is where you process your results
+                // In this example, we find the month where `checking_account` (an output value in Summit)
+                // goes below zero
+                const negativeIndex = response.results.findIndex(function (
+                    result
+                ) {
+                    const checkingBalance = result.values.checking_account;
+                    return (
+                        typeof checkingBalance === 'number' &&
+                        checkingBalance <= 0
+                    );
+                });
+
+                // Show number of months before the checking account goes below zero
+                runway.textContent =
+                    negativeIndex === -1
+                        ? '∞'
+                        : negativeIndex === 0
+                        ? 'One month'
+                        : `${negativeIndex + 1} months`;
+
+                // Show another value
+                repaymentCap.textContent = formatter.format(
+                    response.results[0].values.repayment_cap
+                );
+
+                runway.style.display = 'block';
+                repaymentCap.style.display = 'block';
+            });
+
+            return false;
+        });
+    }
+
+    if (['loaded', 'interactive', 'complete'].includes(document.readyState)) {
+        initCalculator();
+    } else {
+        document.addEventListener('DOMContentLoaded', initCalculator);
+    }
+</script>
+```
