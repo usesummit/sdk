@@ -29,32 +29,14 @@ type SimulationOptions = {
 };
 
 class Summit {
-    #apiBaseUrl: string = DEFAULT_OPTIONS.baseUrl;
+    protected apiBaseUrl: string = DEFAULT_OPTIONS.baseUrl;
+    protected apiKey: ApiKey | null = null;
 
-    get apiBaseUrl(): string {
-        return this.#apiBaseUrl;
-    }
-
-    #apiKey: ApiKey | null = null;
-
-    get apiKey(): ApiKey | null {
-        return this.#apiKey;
-    }
-
-    #sessionId: string | undefined = undefined;
-
-    get sessionId(): string | undefined {
-        return this.#sessionId;
-    }
-
-    set sessionId(sessionId: string | undefined) {
-        this.#sessionId = sessionId;
-    }
-
-    #identifiers: Set<string> = new Set();
+    public sessionId: string | undefined = undefined;
+    protected _identifiers: Set<string> = new Set();
 
     get identifiers() {
-        return Array.from(this.#identifiers);
+        return Array.from(this._identifiers);
     }
 
     constructor(options?: ApiKey | ConfigurationOptions) {
@@ -73,12 +55,8 @@ class Summit {
             throw new Error('`apiKey` is required');
         }
 
-        this.#apiKey = apiKey;
-        this.#apiBaseUrl = baseUrl;
-    }
-
-    addIdentifier(identifier: string): void {
-        this.#identifiers.add(identifier);
+        this.apiKey = apiKey;
+        this.apiBaseUrl = baseUrl;
     }
 
     prepare(parameters: FormData | Record<string, string | number> = {}) {
@@ -100,7 +78,7 @@ class Summit {
 
         return {
             parameters: parsedParameters,
-            identifiers: this.identifiers,
+            identifiers: this._identifiers,
             session_id: this.sessionId,
         };
     }
@@ -112,9 +90,15 @@ class Summit {
     ): Promise<SimulationRun<T>> {
         const {
             app: appIdentifier,
-            baseUrl = this.#apiBaseUrl,
-            apiKey = this.#apiKey,
-        } = typeof app === 'string' ? forgivinglyParseAppIdentifier(app) : app;
+            baseUrl = this.apiBaseUrl,
+            apiKey = this.apiKey,
+        } = typeof app === 'string'
+            ? forgivinglyParseAppIdentifier(app)
+            : {
+                  ...forgivinglyParseAppIdentifier(app.app),
+                  ...(app.baseUrl ? { baseUrl: app.baseUrl } : {}),
+                  ...(app.apiKey ? { apiKey: app.apiKey } : {}),
+              };
 
         if (!apiKey) {
             throw new Error('`apiKey` is required');
@@ -125,7 +109,7 @@ class Summit {
             ...(options ? { options } : {}),
         };
 
-        return fetch(`${baseUrl}/${appIdentifier}/`, {
+        return fetch(`${baseUrl}${appIdentifier}/`, {
             method: 'POST',
             headers: {
                 'X-Api-Key': apiKey,
@@ -135,17 +119,21 @@ class Summit {
         }).then((res) => res.json());
     }
 
+    addIdentifier(identifier: string): void {
+        this._identifiers.add(identifier);
+    }
+
     identify(identifier: string) {
         this.addIdentifier(identifier);
         this.syncIdentifiers();
     }
 
     unidentify() {
-        this.#identifiers = new Set();
+        this._identifiers = new Set();
     }
 
     syncIdentifiers(): Promise<void> {
-        if (!this.#apiKey) {
+        if (!this.apiKey) {
             // If the app is not yet configured, we won't sync the identifiers
             // and instead for either a run, an embed (in browser context), or a specific syncIdentifiers call
             //
@@ -156,15 +144,15 @@ class Summit {
             return Promise.resolve();
         }
 
-        if (this.#identifiers.size === 0) {
+        if (this.identifiers.length === 0) {
             console.warn('No identifiers to sync');
             return Promise.resolve();
         }
 
-        return fetch(`${this.#apiBaseUrl}/identify/`, {
+        return fetch(`${this.apiBaseUrl}/identify/`, {
             method: 'PUT',
             headers: {
-                'X-Api-Key': this.#apiKey,
+                'X-Api-Key': this.apiKey,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -175,7 +163,7 @@ class Summit {
 
     reset() {
         this.unidentify();
-        this.#sessionId = undefined;
+        this.sessionId = undefined;
     }
 }
 

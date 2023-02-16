@@ -18,7 +18,7 @@ let getSessionId = () => '';
 let resetSessionId = () => {};
 
 export default class SummitBrowserClient extends SummitClient {
-    #embedBaseUrl: string = DEFAULT_BROWSER_OPTIONS.embedBaseUrl;
+    protected embedBaseUrl: string = DEFAULT_BROWSER_OPTIONS.embedBaseUrl;
 
     constructor(options?: ApiKey | BrowserConfigurationOptions) {
         super(options);
@@ -63,19 +63,10 @@ export default class SummitBrowserClient extends SummitClient {
             );
 
             this.addIdentifier(getAnonymousUserId());
+            this.sessionId = getSessionId();
 
-            if (cookieOptions) {
-                // Call the getter so that the new value is set,
-                // and in case of cookies, will be sent on subsequent network requests
-                getSessionId();
-            }
-
-            this.#embedBaseUrl = embedBaseUrl;
+            this.embedBaseUrl = embedBaseUrl;
         }
-    }
-
-    get sessionId(): string | undefined {
-        return getSessionId();
     }
 
     reset() {
@@ -92,7 +83,7 @@ export default class SummitBrowserClient extends SummitClient {
     embed(app: EmbedAppIdentifier, targetNode: HTMLElement | string) {
         const {
             app: appIdentifier,
-            embedBaseUrl = this.#embedBaseUrl,
+            embedBaseUrl = this.embedBaseUrl,
             apiKey = this.apiKey,
         } = typeof app === 'string' ? { app } : app;
 
