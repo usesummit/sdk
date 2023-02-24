@@ -25,7 +25,7 @@ export default class SummitBrowserClient extends SummitClient {
     }
 
     configure(options: ApiKey | BrowserConfigurationOptions) {
-        super.configure(options);
+        super.configure(options, false);
 
         if (typeof options !== 'string') {
             const { cookie: cookieOptions, embedBaseUrl } = {

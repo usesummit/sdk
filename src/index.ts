@@ -45,17 +45,17 @@ class Summit {
         }
     }
 
-    configure(options: ApiKey | ConfigurationOptions) {
+    configure(options: ApiKey | ConfigurationOptions, requireApiKey = true) {
         const { apiKey, baseUrl } = {
             ...DEFAULT_OPTIONS,
             ...(typeof options === 'string' ? { apiKey: options } : options),
         };
 
-        if (!apiKey) {
+        if (requireApiKey && !apiKey) {
             throw new Error('`apiKey` is required');
         }
 
-        this.apiKey = apiKey;
+        this.apiKey = apiKey || null;
         this.apiBaseUrl = baseUrl;
     }
 
