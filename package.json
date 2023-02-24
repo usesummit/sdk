@@ -1,6 +1,6 @@
 {
   "name": "@usesummit/sdk",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "author": "Pieter Beulque <pieter.beulque@usesummit.com>",
   "type": "module",
   "source": "src/index.ts",
